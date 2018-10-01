@@ -1,16 +1,19 @@
 package be.belgiplast.webservices;
 
 import java.util.List;
+import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -51,9 +54,9 @@ public class NotesResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Notes> getNote(@QueryParam("id") int id) {
 //        try{
-        //Query q = em.createNamedQuery("Notes.findById");
-        Query q = em.createNamedQuery("Notes.findAll");
-        //q.setParameter("id", id);
+        Query q = em.createNamedQuery("Notes.findById");
+        //Query q = em.createNamedQuery("Notes.findAll");
+        q.setParameter("id", id);
         List<Notes> list = q.getResultList();
         /*
         StringBuilder builder = new StringBuilder();        
@@ -66,5 +69,29 @@ public class NotesResource {
         }
 */
         return list;
+    }
+    
+    /**
+     *
+     * @param contact
+     * @return
+     */
+    @POST
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Notes create(Notes note) {
+        em.getTransaction().begin();
+        Date d = new Date();
+        note.setTimestamp(d);
+        em.persist(note);
+        em.getTransaction().commit();    
+        
+        Query q = em.createNamedQuery("Notes.findByTimeDate");
+        q.setParameter("timestamp", d);
+        q.setParameter("name", note.getName());
+        
+        List<Notes> list = q.getResultList();
+        
+        return list.get(0);
     }
 }
